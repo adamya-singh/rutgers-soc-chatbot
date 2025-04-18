@@ -7,6 +7,16 @@ export async function POST(request: Request) {
     const { messages, tools } = await request.json();
     console.log("Received messages:", messages);
 
+    // Add timestamps to user messages
+    if (messages?.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === 'user' && typeof lastMessage.content === 'string') {
+        const now = new Date();
+        const timestamp = now.toISOString();
+        lastMessage.content = `${lastMessage.content}\n[Current Time (UTC): ${timestamp}]`;
+      }
+    }
+
     const openai = new OpenAI();
 
     const events = await openai.responses.create({

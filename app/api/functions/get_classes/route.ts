@@ -19,7 +19,7 @@ const VALID_DESCRIPTIONS = [
 ]
 
 // Threshold for when to apply LLM refinement
-const REFINEMENT_THRESHOLD = 50
+const REFINEMENT_THRESHOLD = 100
 
 // Initialize OpenAI client
 const openai = new OpenAI({
@@ -100,7 +100,7 @@ export async function GET(request: Request) {
       .from('meetingtimes')
       .select('section_id')
       .order('section_id', { ascending: true })
-      //.limit(100)
+      .limit(1500)
 
     if (meetingday)        sectionIdsQuery = sectionIdsQuery.eq('meetingday', meetingday)
     if (starttimemilitary) sectionIdsQuery = sectionIdsQuery.gte('starttimemilitary', starttimemilitary)
@@ -160,7 +160,7 @@ export async function GET(request: Request) {
           messages: [
             {
               role: "system",
-              content: "You are an AI assistant tasked with filtering course data based on a user query. Analyze the provided JSON array of course sections (containing only section ID and title) and the user's query. Return ONLY the JSON objects from the input array that directly and relevantly answer the user's request. Preserve the original structure of the objects you return. Respond ONLY with the filtered JSON array, nothing else. If no sections are relevant, return an empty array []."
+              content: "You are an AI assistant tasked with filtering course data based on a user query. Analyze the provided JSON array of course sections (containing only section ID and title) and the user's query. Return JSON objects from the input array that relate to the user's request. Preserve the original structure of the objects you return. Respond ONLY with a filtered JSON array, nothing else. YOU MUST RETURN ONLY JSON ARRAY FORMATTED AS JSON, NO MARKDOWN OR ANY OTHER TEXT."
             },
             {
               role: "user",
