@@ -103,11 +103,13 @@ export async function GET(request: Request) {
     // Transform the data to include only filter-related fields + section_id
     const minimalData = (sectionsData || []).map((record: any) => ({
       expandedtitle: record.course_expanded_title,
-      subjectdescription: record.course_subject_description,
+      //subjectdescription: record.course_subject_description,
       description: record.campus_location_description,
       meetingday: record.meeting_time_meeting_day,
       starttimemilitary: record.meeting_time_start_time_military,
-      endtimemilitary: record.meeting_time_end_time_military
+      endtimemilitary: record.meeting_time_end_time_military,
+      buildingcode: record.meeting_time_building_code,
+      roomnumber: record.meeting_time_room_number
     }))
 
     console.log(`Returning ${minimalData.length} transformed records with minimal fields.`)

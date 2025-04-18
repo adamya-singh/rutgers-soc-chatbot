@@ -3,6 +3,7 @@
 // More information on function calling: https://platform.openai.com/docs/guides/function-calling
 
 export const toolsList = [
+  /* Commented out weather and joke functions - can be uncommented if needed
   {
     name: "get_weather",
     description: "Get the weather for a given location",
@@ -23,6 +24,7 @@ export const toolsList = [
     description: "Get a programming joke",
     parameters: {},
   },
+  */
   {
     name: "get_classes",
     description: "Get Rutgers classes based on optional filters for location, time, and day",

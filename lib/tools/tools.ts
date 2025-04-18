@@ -32,6 +32,7 @@ export const getTools = () => {
     tools.push(webSearchTool);
   }
 
+  /* Commented out file search functionality - can be uncommented if needed
   if (fileSearchEnabled) {
     const fileSearchTool = {
       type: "file_search",
@@ -39,6 +40,7 @@ export const getTools = () => {
     };
     tools.push(fileSearchTool);
   }
+  */
 
   if (functionsEnabled) {
     tools.push(
