@@ -26,8 +26,8 @@ export async function GET(request: Request) {
 
     // apply filters only if provided
     if (description)       query = query.eq('campuslocations.description', description)
-    if (starttimemilitary) query = query.eq('meetingtimes.starttimemilitary', starttimemilitary)
-    if (endtimemilitary)   query = query.eq('meetingtimes.endtimemilitary', endtimemilitary)
+    if (starttimemilitary) query = query.gte('meetingtimes.starttimemilitary', starttimemilitary)
+    if (endtimemilitary)   query = query.lte('meetingtimes.endtimemilitary', endtimemilitary)
     if (meetingday)        query = query.eq('meetingtimes.meetingday', meetingday)
 
     const { data, error } = await query
