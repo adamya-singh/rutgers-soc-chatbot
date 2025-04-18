@@ -10,6 +10,8 @@
 
 An intelligent chatbot interface for querying Rutgers University course information using natural language. Built with Next.js, OpenAI, Supabase, and TypeScript.
 
+<img width="825" alt="IMG_8994" src="https://github.com/user-attachments/assets/2a939944-95a1-43fe-88a1-a6c3aad3b461" />
+
 ## Overview
 
 This project provides a web-based chat interface allowing users to ask questions about Rutgers University course schedules. The chatbot leverages the OpenAI API (specifically the Responses API with tool calling) to understand user queries and interact with a Supabase database containing course data.
