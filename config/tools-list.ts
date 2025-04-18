@@ -29,6 +29,10 @@ export const toolsList = [
     name: "get_classes",
     description: "Get Rutgers classes based on optional filters for location, time, and day",
     parameters: {
+      user_query: {
+        type: "string",
+        description: "The user's query text to filter classes"
+      },
       description: {
         type: "string",
         description: "Campus location description (e.g. 'College Avenue', 'Busch', 'Livingston', 'Cook/Douglass')",

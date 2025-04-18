@@ -28,17 +28,20 @@ export const get_joke = async () => {
 */
 
 export const get_classes = async ({
+  user_query,
   description,
   starttimemilitary,
   endtimemilitary,
   meetingday,
 }: {
+  user_query: string;
   description?: string;
   starttimemilitary?: string;
   endtimemilitary?: string;
   meetingday?: string;
 }) => {
   const params = new URLSearchParams();
+  params.append('user_query', user_query);
   if (description) params.append('description', description);
   if (starttimemilitary) params.append('starttimemilitary', starttimemilitary);
   if (endtimemilitary) params.append('endtimemilitary', endtimemilitary);
