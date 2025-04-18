@@ -100,7 +100,7 @@ export async function GET(request: Request) {
       .from('meetingtimes')
       .select('section_id')
       .order('section_id', { ascending: true })
-      //.limit(50)
+      //.limit(100)
 
     if (meetingday)        sectionIdsQuery = sectionIdsQuery.eq('meetingday', meetingday)
     if (starttimemilitary) sectionIdsQuery = sectionIdsQuery.gte('starttimemilitary', starttimemilitary)
