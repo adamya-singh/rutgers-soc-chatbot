@@ -41,6 +41,7 @@ function ApiCallCell({ toolCall }: ToolCallProps) {
                 {JSON.stringify(toolCall.parsedArguments, null, 2)}
               </SyntaxHighlighter>
             </div>
+            {/* Temporarily commenting out tool call output display to improve performance
             <div className="max-h-96 overflow-y-scroll mx-6 p-2 text-xs">
               {toolCall.output ? (
                 <SyntaxHighlighter
@@ -61,6 +62,7 @@ function ApiCallCell({ toolCall }: ToolCallProps) {
                 </div>
               )}
             </div>
+            */}
           </div>
         </div>
       </div>

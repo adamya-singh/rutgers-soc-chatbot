@@ -57,6 +57,7 @@ export async function GET(request: Request) {
       .from('meetingtimes')
       .select('section_id')
       .order('section_id', { ascending: true })
+      //.limit(50)
 
     if (meetingday)        sectionIdsQuery = sectionIdsQuery.eq('meetingday', meetingday)
     if (starttimemilitary) sectionIdsQuery = sectionIdsQuery.gte('starttimemilitary', starttimemilitary)
@@ -96,9 +97,22 @@ export async function GET(request: Request) {
       return new Response(JSON.stringify({ error: sectionsError.message }), { status: 500 })
     }
 
-    // Return the fetched data
-    console.log(`Phase 2 complete. Fetched ${sectionsData?.length ?? 0} full section records`)
-    return new Response(JSON.stringify(sectionsData || []), { status: 200 })
+    // --- TEMPORARY MODIFICATION START ---
+    console.log(`Phase 2 complete. Fetched ${sectionsData?.length ?? 0} full section records. Transforming output...`)
+
+    // Transform the data to include only filter-related fields + section_id
+    const minimalData = (sectionsData || []).map((record: any) => ({
+      expandedtitle: record.course_expanded_title,
+      subjectdescription: record.course_subject_description,
+      description: record.campus_location_description,
+      meetingday: record.meeting_time_meeting_day,
+      starttimemilitary: record.meeting_time_start_time_military,
+      endtimemilitary: record.meeting_time_end_time_military
+    }))
+
+    console.log(`Returning ${minimalData.length} transformed records with minimal fields.`)
+    return new Response(JSON.stringify(minimalData), { status: 200 })
+    // --- TEMPORARY MODIFICATION END ---
 
   } catch (err: any) {
     console.error('Unexpected error in get_classes route:', err)
