@@ -17,15 +17,6 @@ const VALID_DESCRIPTIONS = [
   'Study Abroad'
 ]
 
-// Number of records to fetch per page
-const PAGE_SIZE = 15
-
-// Type for section data
-interface Section {
-  id: number
-  [key: string]: any // Allow other fields since we're using *
-}
-
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url)
@@ -37,9 +28,9 @@ export async function GET(request: Request) {
     // Validate meetingday parameter
     if (meetingday && !VALID_MEETING_DAYS.includes(meetingday)) {
       return new Response(
-        JSON.stringify({ 
-          error: `Invalid meetingday value. Must be one of: ${VALID_MEETING_DAYS.filter(d => d !== '').join(', ')}` 
-        }), 
+        JSON.stringify({
+          error: `Invalid meetingday value. Must be one of: ${VALID_MEETING_DAYS.filter(d => d !== '').join(', ')}`
+        }),
         { status: 400 }
       )
     }
@@ -47,71 +38,68 @@ export async function GET(request: Request) {
     // Validate description parameter
     if (description && !VALID_DESCRIPTIONS.includes(description)) {
       return new Response(
-        JSON.stringify({ 
-          error: `Invalid description value. Must be one of: ${VALID_DESCRIPTIONS.join(', ')}` 
-        }), 
+        JSON.stringify({
+          error: `Invalid description value. Must be one of: ${VALID_DESCRIPTIONS.join(', ')}`
+        }),
         { status: 400 }
       )
     }
 
-    // initialize Supabase client with Next.js cookies (for auth/RLS if needed)
+    // Get cookies and create Supabase client
     const cookieStore = await cookies()
     const supabase = createClient(cookieStore)
-    //const supabase = createClient(cookies())
 
-    // Function to fetch a single page of results
-    const fetchPage = async (start: number) => {
-      let query = supabase
-        .from('sections')
-        .select(`
-          *,
-          courses (*),
-          campuslocations:sectioncampuslocations!inner (*),
-          meetingtimes:meetingtimes!inner (*)
-        `)
-        .range(start, start + PAGE_SIZE - 1)
+    console.log('Starting two-phase query optimization...')
 
-      // apply filters only if provided
-      if (description)       query = query.eq('campuslocations.description', description)
-      if (starttimemilitary) query = query.gte('meetingtimes.starttimemilitary', starttimemilitary)
-      if (endtimemilitary)   query = query.lte('meetingtimes.endtimemilitary', endtimemilitary)
-      if (meetingday)        query = query.eq('meetingtimes.meetingday', meetingday)
+    // Phase 1: Find matching section IDs using meetingtimes filters
+    console.log('Phase 1: Finding matching section IDs...')
+    let sectionIdsQuery = supabase
+      .from('meetingtimes')
+      .select('section_id')
+      .order('section_id', { ascending: true })
 
-      return await query
+    if (meetingday)        sectionIdsQuery = sectionIdsQuery.eq('meetingday', meetingday)
+    if (starttimemilitary) sectionIdsQuery = sectionIdsQuery.gte('starttimemilitary', starttimemilitary)
+    if (endtimemilitary)   sectionIdsQuery = sectionIdsQuery.lte('endtimemilitary', endtimemilitary)
+
+    const { data: sectionIdsData, error: sectionIdsError } = await sectionIdsQuery
+
+    if (sectionIdsError) {
+      console.error('Phase 1 failed:', sectionIdsError)
+      return new Response(JSON.stringify({ error: sectionIdsError.message }), { status: 500 })
     }
 
-    // Fetch all pages
-    let allResults: Section[] = []
-    let currentStart = 0
-    let hasMore = true
-    let totalRecords = 0
+    // Log the raw number of meeting time entries fetched
+    console.log(`Phase 1 raw results: Fetched ${sectionIdsData?.length ?? 0} meeting time entries.`)
 
-    console.log('Starting to fetch matching records...')
-
-    while (hasMore) {
-      const { data, error } = await fetchPage(currentStart)
-      
-      if (error) {
-        console.error('get_classes failed:', error)
-        return new Response(JSON.stringify({ error: error.message }), { status: 500 })
-      }
-
-      if (!data || data.length === 0) {
-        hasMore = false
-        console.log(`Finished fetching records. Total found: ${totalRecords}`)
-      } else {
-        allResults = [...allResults, ...data]
-        totalRecords += data.length
-        currentStart += PAGE_SIZE
-        
-        console.log(`Fetched ${data.length} records. Total so far: ${totalRecords}`)
-        
-        // Small delay to prevent overwhelming the database
-        await new Promise(resolve => setTimeout(resolve, 100))
-      }
+    if (!sectionIdsData || sectionIdsData.length === 0) {
+      console.log('No matching sections found in Phase 1')
+      return new Response(JSON.stringify([]), { status: 200 })
     }
 
-    return new Response(JSON.stringify(allResults), { status: 200 })
+    // Extract unique section IDs
+    const sectionIds = [...new Set(sectionIdsData.map(row => row.section_id))]
+    console.log(`Phase 1 deduplication: Found ${sectionIds.length} unique section IDs.`)
+
+    // Phase 2: Call RPC function to fetch full section records
+    console.log('Phase 2: Calling RPC function get_filtered_sections...')
+    const { data: sectionsData, error: sectionsError } = await supabase.rpc(
+      'get_filtered_sections',
+      {
+        p_section_ids: sectionIds,
+        p_description: description || null
+      }
+    )
+
+    if (sectionsError) {
+      console.error('Phase 2 RPC failed:', sectionsError)
+      return new Response(JSON.stringify({ error: sectionsError.message }), { status: 500 })
+    }
+
+    // Return the fetched data
+    console.log(`Phase 2 complete. Fetched ${sectionsData?.length ?? 0} full section records`)
+    return new Response(JSON.stringify(sectionsData || []), { status: 200 })
+
   } catch (err: any) {
     console.error('Unexpected error in get_classes route:', err)
     return new Response(JSON.stringify({ error: err.message }), { status: 500 })
